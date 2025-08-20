@@ -1,27 +1,15 @@
-const processFile = async (file) => {
-  setLoading(true);
-
-  // Simulate file processing delay
-  await new Promise(resolve => setTimeout(resolve, 2000));
-
-  showSampleAnalysis();
-  setLoading(false);
-}; import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Upload, BarChart3, Clock, Zap, Download, Mail, CheckCircle, AlertCircle } from 'lucide-react';
+import FileUpload from './components/FileUpload.jsx';
+import { parseFileToTests, generateTemplateCsv, generateTemplateJson } from './utils/parseTestData.js';
+import { buildAnalysisFromTests } from './utils/analyzeTests.js';
 
 const TestSplitAnalyzer = () => {
   const [analysis, setAnalysis] = useState(null);
   const [email, setEmail] = useState('');
   const [emailSubmitted, setEmailSubmitted] = useState(false);
-
-  const handleFileUpload = (event) => {
-    const uploadedFile = event.target.files[0];
-    if (uploadedFile) {
-      setFile(uploadedFile);
-      setShowUpload(false); // Hide upload interface
-      processFile(uploadedFile);
-    }
-  };
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const showSampleAnalysis = () => {
     // Mock analysis results that demonstrate the value
@@ -54,6 +42,30 @@ const TestSplitAnalyzer = () => {
     };
 
     setAnalysis(mockAnalysis);
+  };
+
+  const downloadText = (filename, text) => {
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleFileSelected = async (file) => {
+    setError('');
+    setLoading(true);
+    try {
+      const tests = await parseFileToTests(file);
+      const built = buildAnalysisFromTests(tests, 6);
+      setAnalysis(built);
+    } catch (e) {
+      setError(e?.message || 'Failed to parse file. Please upload CSV or JSON.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const generateConfig = () => {
@@ -131,14 +143,14 @@ jobs:
           </p>
         </div>
 
-        {/* Hero Section with Demo Button */}
+        {/* Hero Section with Demo Button and Upload */}
         {!analysis && (
           <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
             <div className="text-center">
               <BarChart3 className="mx-auto w-16 h-16 text-blue-500 mb-4" />
               <h2 className="text-2xl font-semibold mb-4">See How Much Time You Could Save</h2>
               <p className="text-gray-600 mb-6">
-                Most teams can reduce their CI test runtime by 30-50% with optimized parallelization
+                Most teams can reduce their CI test runtime by 30-50% with optimized parallelization. Upload your JSON/CSV test timings to see your own analysis—or use the sample.
               </p>
 
               <div className="flex flex-col items-center gap-4">
@@ -150,9 +162,70 @@ jobs:
                   See Sample Analysis
                 </button>
 
-                <p className="text-sm text-gray-500">
-                  File upload coming soon - join our waitlist for early access
-                </p>
+                <div className="w-full mt-8">
+                  <div className="text-center text-lg sm:text-xl font-bold text-gray-900 mb-6">
+                    Upload Your Tests — Cut Your Run Time in Half Today.
+                  </div>
+                  <div className="text-left mb-2 font-semibold text-gray-800 flex items-center gap-2">
+                    <Upload className="w-4 h-4 text-gray-600" />
+                    Upload your test timings (CSV or JSON)
+                  </div>
+                  <FileUpload onFileSelected={handleFileSelected} />
+                  {error && (
+                    <div className="mt-2 text-sm text-red-600">{error}</div>
+                  )}
+                  {loading && (
+                    <div className="mt-2 text-sm text-gray-600">Parsing and analyzing…</div>
+                  )}
+                  <div className="mt-3 flex flex-col sm:flex-row gap-2 text-sm">
+                    <button
+                      onClick={() => downloadText('test-timings.template.csv', generateTemplateCsv())}
+                      className="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-md"
+                    >
+                      Download CSV template
+                    </button>
+                    <button
+                      onClick={() => downloadText('test-timings.template.json', generateTemplateJson())}
+                      className="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-md"
+                    >
+                      Download JSON template
+                    </button>
+                  </div>
+                  <div className="mt-2 text-xs text-gray-500 text-left">
+                    CSV headers supported: name,file,spec,title | duration,time,seconds,ms | optional group/runner
+                  </div>
+
+                  <div className="mt-6 text-left bg-gray-50 border border-gray-200 rounded-lg p-4 md:p-5 lg:p-6 w-full">
+                    <div className="flex items-center gap-2 mb-2">
+                      <AlertCircle className="w-4 h-4 text-gray-600" />
+                      <span className="font-semibold text-gray-800">Where to find or generate your timings</span>
+                    </div>
+                    <p className="text-sm text-gray-700 mb-3">
+                      Works with Cypress, Playwright, Jest, and Vitest. Run one of the commands below, then upload the resulting <span className="font-mono">results.json</span>.
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <div className="font-semibold text-gray-800 mb-1">Cypress</div>
+                        <pre className="bg-white border border-gray-200 rounded p-2 overflow-x-auto text-xs sm:text-sm"><code>npx cypress run --reporter json --reporter-options output=results.json</code></pre>
+                      </div>
+                      <div>
+                        <div className="font-semibold text-gray-800 mb-1">Playwright</div>
+                        <pre className="bg-white border border-gray-200 rounded p-2 overflow-x-auto text-xs sm:text-sm"><code>npx playwright test --reporter=json &gt; results.json</code></pre>
+                      </div>
+                      <div>
+                        <div className="font-semibold text-gray-800 mb-1">Jest</div>
+                        <pre className="bg-white border border-gray-200 rounded p-2 overflow-x-auto text-xs sm:text-sm"><code>npx jest --runInBand --json --outputFile=results.json</code></pre>
+                      </div>
+                      <div>
+                        <div className="font-semibold text-gray-800 mb-1">Vitest</div>
+                        <pre className="bg-white border border-gray-200 rounded p-2 overflow-x-auto text-xs sm:text-sm"><code>npx vitest run --reporter=json &gt; results.json</code></pre>
+                      </div>
+                    </div>
+                    <p className="text-xs text-gray-600 mt-3">
+                      Prefer CSV? Create a file with headers <span className="font-mono">name,duration,group</span>. Units can be minutes, seconds, or ms—we auto-detect.
+                    </p>
+                  </div>
+                </div>
               </div>
 
               <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
