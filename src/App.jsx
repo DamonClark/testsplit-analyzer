@@ -145,102 +145,92 @@ jobs:
 
         {/* Hero Section with Demo Button and Upload */}
         {!analysis && (
-          <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
+          <div className="bg-white rounded-2xl shadow-lg p-8 mb-8 space-y-10">
+            {/* Intro */}
             <div className="text-center">
-              <BarChart3 className="mx-auto w-16 h-16 text-blue-500 mb-4" />
-              <h2 className="text-2xl font-semibold mb-4">See How Much Time You Could Save</h2>
-              <p className="text-gray-600 mb-6">
-                Most teams can reduce their CI test runtime by 30-50% with optimized parallelization. Upload your JSON/CSV test timings to see your own analysis—or use the sample.
+              <BarChart3 className="mx-auto w-14 h-14 text-blue-500 mb-4" />
+              <h2 className="text-2xl font-semibold mb-3">See How Much Time You Could Save</h2>
+              <p className="text-gray-600 max-w-xl mx-auto">
+                Most teams can reduce their CI test runtime by 30–50% with optimized parallelization.
+                Upload your test timings to get your analysis—or explore the sample.
               </p>
+              <button
+                onClick={showSampleAnalysis}
+                className="mt-6 bg-blue-600 text-white px-8 py-3 rounded-xl font-semibold text-lg hover:bg-blue-700 transition-colors inline-flex items-center gap-2"
+              >
+                <Zap className="w-5 h-5" />
+                See Sample Analysis
+              </button>
+            </div>
 
-              <div className="flex flex-col items-center gap-4">
+            {/* Step 1: Upload */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <Upload className="w-5 h-5 text-gray-600" />
+                Step 1: Upload Your Test Timings (CSV or JSON)
+              </h3>
+
+              <FileUpload onFileSelected={handleFileSelected} />
+
+              {error && <div className="text-sm text-red-600">{error}</div>}
+              {loading && <div className="text-sm text-gray-600">Parsing and analyzing…</div>}
+
+              <div className="flex flex-wrap gap-2 text-sm">
                 <button
-                  onClick={showSampleAnalysis}
-                  className="bg-blue-600 text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                  onClick={() => downloadText('test-timings.template.csv', generateTemplateCsv())}
+                  className="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-md"
                 >
-                  <Zap className="w-5 h-5" />
-                  See Sample Analysis
+                  Download CSV Template
                 </button>
-
-                <div className="w-full mt-8">
-                  <div className="text-center text-lg sm:text-xl font-bold text-gray-900 mb-6">
-                    Upload Your Tests — Cut Your Run Time in Half Today.
-                  </div>
-                  <div className="text-left mb-2 font-semibold text-gray-800 flex items-center gap-2">
-                    <Upload className="w-4 h-4 text-gray-600" />
-                    Upload your test timings (CSV or JSON)
-                  </div>
-                  <FileUpload onFileSelected={handleFileSelected} />
-                  {error && (
-                    <div className="mt-2 text-sm text-red-600">{error}</div>
-                  )}
-                  {loading && (
-                    <div className="mt-2 text-sm text-gray-600">Parsing and analyzing…</div>
-                  )}
-                  <div className="mt-3 flex flex-col sm:flex-row gap-2 text-sm">
-                    <button
-                      onClick={() => downloadText('test-timings.template.csv', generateTemplateCsv())}
-                      className="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-md"
-                    >
-                      Download CSV template
-                    </button>
-                    <button
-                      onClick={() => downloadText('test-timings.template.json', generateTemplateJson())}
-                      className="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-md"
-                    >
-                      Download JSON template
-                    </button>
-                  </div>
-                  <div className="mt-2 text-xs text-gray-500 text-left">
-                    CSV headers supported: name,file,spec,title | duration,time,seconds,ms | optional group/runner
-                  </div>
-
-                  <div className="mt-6 text-left bg-gray-50 border border-gray-200 rounded-lg p-4 md:p-5 lg:p-6 w-full">
-                    <div className="flex items-center gap-2 mb-2">
-                      <AlertCircle className="w-4 h-4 text-gray-600" />
-                      <span className="font-semibold text-gray-800">Where to find or generate your timings</span>
-                    </div>
-                    <p className="text-sm text-gray-700 mb-3">
-                      Works with Cypress, Playwright, Jest, and Vitest. Run one of the commands below, then upload the resulting <span className="font-mono">results.json</span>.
-                    </p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                      <div>
-                        <div className="font-semibold text-gray-800 mb-1">Cypress</div>
-                        <pre className="bg-white border border-gray-200 rounded p-2 overflow-x-auto text-xs sm:text-sm"><code>npx cypress run --reporter json --reporter-options output=results.json</code></pre>
-                      </div>
-                      <div>
-                        <div className="font-semibold text-gray-800 mb-1">Playwright</div>
-                        <pre className="bg-white border border-gray-200 rounded p-2 overflow-x-auto text-xs sm:text-sm"><code>npx playwright test --reporter=json &gt; results.json</code></pre>
-                      </div>
-                      <div>
-                        <div className="font-semibold text-gray-800 mb-1">Jest</div>
-                        <pre className="bg-white border border-gray-200 rounded p-2 overflow-x-auto text-xs sm:text-sm"><code>npx jest --runInBand --json --outputFile=results.json</code></pre>
-                      </div>
-                      <div>
-                        <div className="font-semibold text-gray-800 mb-1">Vitest</div>
-                        <pre className="bg-white border border-gray-200 rounded p-2 overflow-x-auto text-xs sm:text-sm"><code>npx vitest run --reporter=json &gt; results.json</code></pre>
-                      </div>
-                    </div>
-                    <p className="text-xs text-gray-600 mt-3">
-                      Prefer CSV? Create a file with headers <span className="font-mono">name,duration,group</span>. Units can be minutes, seconds, or ms—we auto-detect.
-                    </p>
-                  </div>
-                </div>
+                <button
+                  onClick={() => downloadText('test-timings.template.json', generateTemplateJson())}
+                  className="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-md"
+                >
+                  Download JSON Template
+                </button>
               </div>
+            </div>
 
-              <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
-                <div className="flex items-center justify-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  <span>Works with any CI system</span>
-                </div>
-                <div className="flex items-center justify-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  <span>Supports Cypress & Playwright</span>
-                </div>
-                <div className="flex items-center justify-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  <span>Free analysis & recommendations</span>
-                </div>
+            {/* Step 2: Optional Help */}
+            <details className="bg-gray-50 border border-gray-200 rounded-lg p-5">
+              <summary className="cursor-pointer font-semibold text-gray-800 flex items-center gap-2">
+                <AlertCircle className="w-5 h-5 text-gray-600" />
+                Need help generating timings?
+              </summary>
+              <p className="text-sm text-gray-700 mt-3 mb-4">
+                Works with Cypress, Playwright, Jest, and Vitest. Run one of these commands to create a
+                <span className="font-mono"> results.json </span> file, then upload it.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                {[
+                  { name: 'Cypress', cmd: 'npx cypress run --reporter json --reporter-options output=results.json' },
+                  { name: 'Playwright', cmd: 'npx playwright test --reporter=json > results.json' },
+                  { name: 'Jest', cmd: 'npx jest --runInBand --json --outputFile=results.json' },
+                  { name: 'Vitest', cmd: 'npx vitest run --reporter=json > results.json' },
+                ].map((tool) => (
+                  <div key={tool.name}>
+                    <div className="font-semibold text-gray-800 mb-1">{tool.name}</div>
+                    <pre className="bg-white border border-gray-200 rounded p-2 overflow-x-auto text-xs">
+                      <code>{tool.cmd}</code>
+                    </pre>
+                  </div>
+                ))}
+              </div>
+            </details>
+
+            {/* Footer mini highlights */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+              <div className="flex items-center justify-center gap-2">
+                <CheckCircle className="w-4 h-4 text-green-500" />
+                <span>Works with any CI system</span>
+              </div>
+              <div className="flex items-center justify-center gap-2">
+                <CheckCircle className="w-4 h-4 text-green-500" />
+                <span>Supports Cypress & Playwright</span>
+              </div>
+              <div className="flex items-center justify-center gap-2">
+                <CheckCircle className="w-4 h-4 text-green-500" />
+                <span>Free analysis & recommendations</span>
               </div>
             </div>
           </div>
